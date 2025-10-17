@@ -1,3 +1,11 @@
+import firebase_admin
+from firebase_admin import credentials, db
+
+# Inicialización de Firebase
+cred = credentials.Certificate(r"C:\Users\User\Downloads\bibliotecaoscar.json")
+firebase_admin.initialize_app(cred, {
+    "databaseURL": "https://bibliotecaoscar-a7820-default-rtdb.firebaseio.com/"  
+})
 
 
 
@@ -54,60 +62,72 @@ class Administrador(Usuario):
 
 class Biblioteca:
     def __init__(self):
-        # Inicializamos las listas para guardar libros y usuarios
-        self.libros = []
-        self.usuarios = []
-        # Arrancamos con categorías mínimas
-        self.categorias = ["Ciencia", "Literatura", "Historia"]
+        # Referencias a las ramas de la base de datos
+        self.ref_libros = db.reference("libros")
+        self.ref_usuarios = db.reference("usuarios")
+        self.ref_categorias = db.reference("categorias")
+
+        # Categorías por defecto (si no existen en Firebase)
+        if not self.ref_categorias.get():
+            self.ref_categorias.set(["Ciencia", "Literatura", "Historia"])
 
     def registrar_libro(self, usuario, titulo, autor, categoria):
-        # Validamos que SOLO un administrador pueda registrar libros
         if not isinstance(usuario, Administrador):
             print("Solo un administrador puede registrar libros.")
             return
 
-        # Si la categoría no existe, se agrega automáticamente
-        if categoria not in self.categorias:
-            self.categorias.append(categoria)
+        # Agregar categoría si no existe
+        categorias = self.ref_categorias.get() or []
+        if categoria not in categorias:
+            categorias.append(categoria)
+            self.ref_categorias.set(categorias)
 
-        # Creamos un nuevo objeto Libro con los datos ingresados
-        nuevo_libro = Libro(titulo, autor, categoria)
-
-        # Lo añadimos a la lista de libros
-        self.libros.append(nuevo_libro)
-        print(f"Libro '{titulo}' registrado con éxito.")
+        # Guardar el libro en Firebase
+        nuevo_libro = {
+            "titulo": titulo,
+            "autor": autor,
+            "categoria": categoria
+        }
+        self.ref_libros.push(nuevo_libro)
+        print(f"Libro '{titulo}' registrado con éxito en Firebase.")
 
     def registrar_usuario(self, usuario):
-        # Añadimos un objeto usuario (ya instanciado) a la lista
-        self.usuarios.append(usuario)
-        print(f"Usuario '{usuario.nombre}' registrado con éxito.")
+        nuevo_usuario = {
+            "nombre": usuario.nombre,
+            "documento": usuario.documento,
+            "tipo": usuario.tipo
+        }
+        self.ref_usuarios.push(nuevo_usuario)
+        print(f"Usuario '{usuario.nombre}' registrado con éxito en Firebase.")
 
     def mostrar_libros(self):
-        # Mostramos todos los libros almacenados
         print("\n--- Lista de Libros ---")
-        if not self.libros:
+        libros = self.ref_libros.get()
+        if not libros:
             print("No hay libros registrados.")
-        for libro in self.libros:
-            print(libro.mostrar_info())
-    
+            return
+        for id_libro, datos in libros.items():
+            print(f"{datos['titulo']} - {datos['autor']} - {datos['categoria']}")
+
     def mostrar_usuarios(self, usuario):
-        # Validamos que SOLO un administrador pueda ver usuarios
         if not isinstance(usuario, Administrador):
             print("Solo un administrador puede ver la lista de usuarios.")
             return
 
-        # Mostramos los usuarios registrados
         print("\n--- Lista de Usuarios ---")
-        if not self.usuarios:
+        usuarios = self.ref_usuarios.get()
+        if not usuarios:
             print("No hay usuarios registrados.")
-        for u in self.usuarios:
-            print(u.mostrar_info())
+            return
+        for id_usuario, datos in usuarios.items():
+            print(f"{datos['nombre']} (Documento: {datos['documento']}) - {datos['tipo']}")
 
     def mostrar_categorias(self):
-        # Mostramos todas las categorías disponibles
         print("\n--- Categorías disponibles ---")
-        for c in self.categorias:
+        categorias = self.ref_categorias.get()
+        for c in categorias:
             print("-", c)
+
 
 
 # PROGRAMA PRINCIPAL
