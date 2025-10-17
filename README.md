@@ -51,3 +51,10 @@ OPCION 4:
 OPCION 5:
 
 <img width="216" height="161" alt="image" src="https://github.com/user-attachments/assets/c3dce862-2338-4117-9130-f23d35a62eb9" />
+
+# FIREBASE DEMOSTRACION:
+
+<img width="343" height="167" alt="image" src="https://github.com/user-attachments/assets/213f1a02-e3e9-4755-ab56-8b684a717235" />
+
+<img width="283" height="143" alt="image" src="https://github.com/user-attachments/assets/be8ba43a-775b-47b7-8842-6007c9fe9f27" />
+
